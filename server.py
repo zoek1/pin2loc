@@ -12,24 +12,29 @@ import locations_routes
 
 def create_app():
 
-    app = Flask(__name__)
+    new_app = Flask(__name__)
 
-    app.config["MONGO_SETTINGS"] = {
-        'db': 'pin2loc',
+    new_app.config["MONGODB_SETTINGS"] = {
+        'db': 'locations',
         'host': os.getenv('MONGODB_URI', 'localhost')
     }
 
-    app.config["SECRET_KEY"] = os.getenv('LOCAL_KEY', "KeepThisS3cr3t")
+    new_app.config["SECRET_KEY"] = os.getenv('LOCAL_KEY', "KeepThisS3cr3t")
 
-    db = MongoEngine(app)
+    db = MongoEngine(new_app)
     Location = location_model.factory(db)
 
-    app.register_blueprint(locations_routes.locations)
+    new_app.register_blueprint(locations_routes.locations)
     locations_routes.Location = Location
 
-    return app
+    return new_app
+
+
+PORT = int(os.getenv("PORT", 5000))
+DEBUG = os.getenv("DEBUG", "False") == "True"
+HOST = os.getenv("HOST", "0.0.0.0")
+
+app = create_app()
 
 if __name__ == "__main__":
-    app = create_app()
-    app.run(debug=True)
-
+    app.run(host=HOST, debug=DEBUG, port=PORT)

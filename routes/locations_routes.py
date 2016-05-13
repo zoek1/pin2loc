@@ -2,7 +2,6 @@ from flask import Blueprint, request, jsonify
 
 import geojson
 import json
-import rollbar
 import os
 
 
