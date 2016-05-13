@@ -9,7 +9,20 @@ locations = Blueprint('locations', 'locations', url_prefix='/locations')
 
 @locations.route('/')
 def get_locations():
-    return jsonify({'locations': [json.loads(doc.content) for doc in Location.objects]})
+    locations = {
+        'locations': []
+    }
+
+    for location_object in Location.objects:
+        json_object = json.loads(location_object.content)
+
+        if not 'properties' in json_object:
+            json_object['properties'] = {}
+
+        json_object['properties']['id'] = str(location_object.id)
+        locations['locations'].append(json_object)
+
+    return jsonify(locations)
 
 
 @locations.route('/new', methods=['POST'])
