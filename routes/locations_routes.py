@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, Response
 
 import geojson
 import json
@@ -9,9 +9,7 @@ locations = Blueprint('locations', 'locations', url_prefix='/locations')
 
 @locations.route('/')
 def get_locations():
-    locations = {
-        'locations': []
-    }
+    locations = []
 
     for location_object in Location.objects:
         json_object = json.loads(location_object.content)
@@ -20,9 +18,9 @@ def get_locations():
             json_object['properties'] = {}
 
         json_object['properties']['id'] = str(location_object.id)
-        locations['locations'].append(json_object)
+        locations.append(json_object)
 
-    return jsonify(locations)
+    return Response(json.dumps(locations), mimetype='text/json')
 
 
 @locations.route('/new', methods=['POST'])
