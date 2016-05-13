@@ -2,50 +2,34 @@ import sys
 import os
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'models'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'routes'))
 
-from flask import Flask, jsonify, request, abort
-
+from flask import Flask
 from  flask.ext.mongoengine import MongoEngine
-import random
-import locations
-import geojson
-import json
 
-app = Flask(__name__)
+import location_model
+import locations_routes
 
-app.config["MONGO_SETTINGS"] = {
-    'db': 'pin2loc',
-    'host': os.getenv('MONGODB_URI', 'localhost')
-}
+def create_app():
 
-app.config["SECRET_KEY"] = os.getenv('LOCAL_KEY', "KeepThisS3cr3t")
+    app = Flask(__name__)
 
-db = MongoEngine(app)
+    app.config["MONGO_SETTINGS"] = {
+        'db': 'pin2loc',
+        'host': os.getenv('MONGODB_URI', 'localhost')
+    }
 
-Location = locations.factory(db)
+    app.config["SECRET_KEY"] = os.getenv('LOCAL_KEY', "KeepThisS3cr3t")
 
-@app.route('/locations')
-def get_locations():
-    return jsonify({'locations': [json.loads(doc.content) for doc in Location.objects]})
+    db = MongoEngine(app)
+    Location = location_model.factory(db)
 
-@app.route('/locations/<loc_id>')
-def get_location(loc_id):
-    element = Location.objects.get(id=loc_id)
-    return jsonify(json.loads(element.content))
+    app.register_blueprint(locations_routes.locations)
+    locations_routes.Location = Location
 
-@app.route('/locations/new', methods=['POST'])
-def register_location():
-    try:
-        data = geojson.loads(request.get_data())
-        loc = Location(content=geojson.dumps(data))
-        loc.save()
-    except e:
-        return jsonify({'result': 'Error', 'error': str(e)})
-
-
-    return jsonify({'result': 'Ok', 'id': str(loc.id)})
-
+    return app
 
 if __name__ == "__main__":
+    app = create_app()
     app.run(debug=True)
 
